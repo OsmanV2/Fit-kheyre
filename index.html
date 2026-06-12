@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html lang="so">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KHEYRE FIT - Premium Elite Fitness & AI Nutrition Hub</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Identity Services (Sign-In) -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        appBg: '#131619',
+                        cardBg: '#1C2024',
+                        inputBg: '#23272B',
+                        borderColor: '#2D3339',
+                        primary: '#FFC107',
+                        primaryHover: '#E0A800'
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #131619;
+            color: #E2E8F0;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #131619;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2D3339;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #FFC107;
+        }
+        /* Input autofill fix for dark theme */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover, 
+        input:-webkit-autofill:focus, 
+        input:-webkit-autofill:active{
+            -webkit-box-shadow: 0 0 0 30px #23272B inset !important;
+            -webkit-text-fill-color: white !important;
+        }
+        /* Custom checkmark color for accent */
+        input[type="checkbox"] {
+            accent-color: #FFC107;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 sm:p-6 lg:p-8 flex flex-col font-sans selection:bg-primary/30 selection:text-white relative">
+
+    <!-- Toast Notification (Fariimaha gaaban) -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-cardBg border border-primary text-white px-4 py-3 rounded-xl shadow-lg transition-transform transform translate-y-20 opacity-0 z-50 flex items-center gap-3 pointer-events-none duration-300">
+        <i data-lucide="info" class="text-primary w-5 h-5"></i>
+        <span id="toastMsg" class="text-sm font-medium">Fariin</span>
+    </div>
+
+    <!-- Calendar Booking Modal (Pop-up) -->
+    <div id="calendarModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-cardBg border border-borderColor rounded-3xl w-full max-w-md p-6 sm:p-8 shadow-2xl transform scale-95 transition-transform duration-300">
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center border-b border-borderColor pb-4 mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
+                        <i data-lucide="calendar-plus" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-base font-bold text-white">Maareynta Maalinta</h4>
+                        <p id="selectedDateLabel" class="text-[11px] text-gray-400 mt-0.5">12 Juun 2026</p>
+                    </div>
+                </div>
+                <button onclick="closeCalendarModal()" class="p-2 hover:bg-inputBg rounded-xl text-gray-400 hover:text-white transition-all">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body Form -->
+            <div class="space-y-5">
+                <!-- Book Appointment (Balan Qabasho) -->
+                <div>
+                    <label class="block text-[10px] uppercase tracking-widest text-gray-400 mb-2 font-bold">Magaca Balanta (Booking)</label>
+                    <input id="apptTitle" type="text" placeholder="Tusaale: Tababar gaar ah (Coach)" class="w-full bg-inputBg border border-borderColor rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-primary placeholder-gray-600 transition-all">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Appointment Time -->
+                    <div>
+                        <label class="block text-[10px] uppercase tracking-widest text-gray-400 mb-2 font-bold">Saacadda</label>
+                        <input id="apptTime" type="time" class="w-full bg-inputBg border border-borderColor rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-primary transition-all">
+                    </div>
+                    <!-- Workout completed checkbox status -->
+                    <div>
+                        <label class="block text-[10px] uppercase tracking-widest text-gray-400 mb-2 font-bold">Xaalada Jimicsiga</label>
+                        <div class="flex items-center h-[46px] bg-inputBg border border-borderColor rounded-xl px-4">
+                            <label class="flex items-center gap-2 cursor-pointer w-full">
+                                <input id="apptDone" type="checkbox" class="w-4 h-4 rounded text-primary focus:ring-primary bg-cardBg border-borderColor">
+                                <span class="text-xs text-gray-300">Waa la qabtay</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Daily Notes -->
+                <div>
+                    <label class="block text-[10px] uppercase tracking-widest text-gray-400 mb-2 font-bold">Qoraalo kale (Notes)</label>
+                    <textarea id="apptNotes" rows="3" placeholder="Maanta waa maalinta lugaha, kordhi miisaanka..." class="w-full bg-inputBg border border-borderColor rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-primary placeholder-gray-600 transition-all resize-none"></textarea>
+                </div>
+            </div>
+
+            <!-- Modal Footer Buttons -->
+            <div class="flex gap-3 mt-8 border-t border-borderColor pt-5">
+                <button onclick="deleteCalendarData()" class="px-4 py-3 rounded-xl border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold text-xs transition-all flex items-center justify-center gap-1.5 shrink-0">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i> Tirtir
+                </button>
+                <button onclick="closeCalendarModal()" class="flex-1 py-3 rounded-xl bg-inputBg hover:bg-borderColor text-gray-300 font-bold text-xs transition-all">
+                    Xir
+                </button>
+                <button onclick="saveCalendarData()" class="flex-1 py-3 rounded-xl bg-primary hover:bg-primaryHover text-[#131619] font-bold text-xs transition-all">
+                    Keydi Xogta
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header Section -->
+    <header class="max-w-[1400px] w-full mx-auto mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 border-b border-borderColor pb-6 pt-2">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-primary rounded-xl flex items-center justify-center text-appBg shadow-lg shadow-primary/20">
+                <i data-lucide="dumbbell" class="w-7 h-7"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl font-extrabold tracking-tight text-white flex items-center gap-2">
+                    <span class="text-primary">KHEYRE</span> FIT
+                </h1>
+                <p class="text-[10px] uppercase tracking-[0.2em] text-gray-400 font-bold mt-0.5">Premium AI Health & Nutrition System</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <div class="hidden sm:flex items-center gap-2 bg-[#122A22] border border-[#1A4032] px-4 py-2 rounded-full cursor-pointer hover:bg-[#1A4032] transition-colors">
+                <span class="w-2 h-2 rounded-full bg-[#22C55E] animate-pulse"></span>
+                <span class="text-[11px] font-bold tracking-wider text-[#4ADE80] uppercase">Live Optimizer</span>
+            </div>
+            
+            <!-- Google Auth Integration -->
+            <div id="googleAuthBtn">
+                <div id="g_id_onload"
+                     data-client_id="618404018429-9kb31pp3ft2s708l3ll452hnd4h179g6.apps.googleusercontent.com"
+                     data-context="signin"
+                     data-ux_mode="popup"
+                     data-callback="handleCredentialResponse"
+                     data-auto_prompt="false">
+                </div>
+                <div class="g_id_signin"
+                     data-type="standard"
+                     data-shape="pill"
+                     data-theme="filled_black"
+                     data-text="signin_with"
+                     data-size="large"
+                     data-logo_alignment="left">
+                </div>
+            </div>
+
+            <!-- Logged-in User Profile UI (Hidden initially) -->
+            <div id="userProfile" class="hidden items-center gap-2 bg-cardBg border border-borderColor pl-1.5 pr-4 py-1.5 rounded-full transition-colors">
+                <img id="userImg" src="" alt="Profile" class="w-8 h-8 rounded-full object-cover border border-primary/50">
+                <span id="userNameHeader" class="text-[11px] font-bold text-white px-1">Magaca</span>
+                <button onclick="handleSignOut()" class="ml-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 p-1.5 rounded-full transition-colors" title="Bax (Logout)">
+                    <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+                </button>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- Main Content Grid -->
+    <main class="max-w-[1400px] w-full mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+        
+        <!-- COLUMN 1: Inputs & Body Status -->
+        <div class="space-y-6 flex flex-col justify-start">
+            <!-- Form Card (Xogta Jidhkaaga) -->
+            <section class="bg-cardBg p-6 sm:p-8 rounded-3xl border border-borderColor flex flex-col">
+                <div class="flex items-center gap-3 mb-3">
+                    <i data-lucide="sliders-horizontal" class="text-primary w-6 h-6"></i>
+                    <h2 class="text-xl font-bold text-white">Xogta Jidhkaaga</h2>
+                </div>
+                <p class="text-xs text-gray-400 mb-8 leading-relaxed">Fadlan geli cabiradaada saxda ah si aan ugu diyaarino qorshe cilmiyaysan.</p>
+                
+                <!-- Error Box -->
+                <div id="errorBox" class="hidden mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-xs flex items-start gap-3">
+                    <i data-lucide="alert-circle" class="w-5 h-5 shrink-0"></i>
+                    <div>
+                        <p class="font-bold mb-1">Xog khaldan!</p>
+                        <p id="errorMessage">Fadlan geli da'da, dhererka iyo miisaankaaga.</p>
+                    </div>
+                </div>
+
+                <form id="fitForm" class="space-y-6" onsubmit="event.preventDefault();">
+                    <!-- Name Input -->
+                    <div>
+                        <label class="block text-[11px] uppercase tracking-widest text-gray-400 mb-2 font-bold">Magacaaga</label>
+                        <div class="relative">
+                            <i data-lucide="user" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500"></i>
+                            <input id="name" type="text" placeholder="Tusaale: Maxamed" class="w-full bg-inputBg border border-borderColor rounded-xl pl-11 pr-4 py-3.5 text-sm text-white focus:outline-none focus:border-primary transition-all">
+                        </div>
+                    </div>
+
+                    <!-- Age & Gender Grid -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[11px] uppercase tracking-widest text-gray-400 mb-2 font-bold">Da'da (Sannad)</label>
+                            <input id="age" type="number" placeholder="25" class="w-full bg-inputBg border border-borderColor rounded-xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-primary transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] uppercase tracking-widest text-gray-400 mb-2 font-bold">Jinsiga</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button type="button" id="btnRag" onclick="setGender('rag')" class="py-3 text-xs rounded-xl border border-primary bg-primary/10 text-primary font-bold transition-all flex justify-center items-center gap-1.5">
+                                    <i data-lucide="user" class="w-3.5 h-3.5"></i> Rag
+                                </button>
+                                <button type="button" id="btnDumar" onclick="setGender('dumar')" class="py-3 text-xs rounded-xl border border-borderColor bg-inputBg text-gray-400 hover:text-white transition-all flex justify-center items-center gap-1.5">
+                                    <i data-lucide="user" class="w-3.5 h-3.5"></i> Dumar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Weight & Height Grid -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[11px] uppercase tracking-widest text-gray-400 mb-2 font-bold">Miisaanka (KG)</label>
+                            <input id="weight" type="number" placeholder="85" class="w-full bg-inputBg border border-borderColor rounded-xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-primary transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] uppercase tracking-widest text-gray-400 mb-2 font-bold">Dhererka (CM)</label>
+                            <input id="height" type="number" placeholder="175" class="w-full bg-inputBg border border-borderColor rounded-xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-primary transition-all">
+                        </div>
+                    </div>
+
+                    <!-- Activity Level Select -->
+                    <div>
+                        <label class="block text-[11px] uppercase tracking-widest text-gray-400 mb-2 font-bold">Heerka Dhaqdhaqaaqaaga</label>
+                        <div class="relative">
+                            <select id="activityLevel" class="w-full bg-inputBg border border-borderColor rounded-xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-primary appearance-none cursor-pointer">
+                                <option value="1.2">Fadhi badan (Shaqo Xafiis)</option>
+                                <option value="1.375" selected>Jimicsi Fudud (1–3 maalmood asbuucii)</option>
+                                <option value="1.55">Jimicsi Dhexdhexaad ah (3–5 maalmood)</option>
+                                <option value="1.725">Jimicsi Firfircoon (6–7 maalmood)</option>
+                                <option value="1.9">Jimicsi aad u culus (Ciyaartoy)</option>
+                            </select>
+                            <i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none"></i>
+                        </div>
+                    </div>
+
+                    <!-- Fitness Goals Selection -->
+                    <div>
+                        <label class="block text-[11px] uppercase tracking-widest text-gray-400 mb-3 font-bold">Dooro Hadafkaaga Fitness-ka</label>
+                        <div class="grid grid-cols-3 gap-3">
+                            <button type="button" id="goalLoss" onclick="setGoal('loss')" class="p-3.5 text-center rounded-xl border border-primary bg-primary/10 text-primary font-bold transition-all text-xs flex flex-col items-center gap-2">
+                                <i data-lucide="flame" class="w-5 h-5"></i>
+                                <span>Baruur Dhimis</span>
+                            </button>
+                            <button type="button" id="goalMaintain" onclick="setGoal('maintain')" class="p-3.5 text-center rounded-xl border border-borderColor bg-inputBg text-gray-400 hover:text-white transition-all text-xs flex flex-col items-center gap-2">
+                                <i data-lucide="scale" class="w-5 h-5"></i>
+                                <span>Miisaan Hayn</span>
+                            </button>
+                            <button type="button" id="goalGain" onclick="setGoal('gain')" class="p-3.5 text-center rounded-xl border border-borderColor bg-inputBg text-gray-400 hover:text-white transition-all text-xs flex flex-col items-center gap-2">
+                                <i data-lucide="trending-up" class="w-5 h-5"></i>
+                                <span>Muruq Dhisid</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                
+                <button onclick="calculatePlan()" class="w-full mt-6 bg-primary hover:bg-primaryHover text-[#131619] font-extrabold py-4 rounded-xl transition-all flex justify-center items-center gap-2 text-sm tracking-wide">
+                    <span>XISAABI QORSHAHAAGA</span>
+                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+            </section>
+
+            <!-- BMI Box -->
+            <div class="bg-cardBg p-6 rounded-3xl border border-borderColor">
+                <h3 class="text-xs font-bold text-white uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <i data-lucide="heart" class="text-primary w-4 h-4"></i>
+                    Xaalada Jidhka & BMI
+                </h3>
+                <div class="flex items-center justify-between bg-inputBg rounded-2xl p-4">
+                    <div>
+                        <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Body Mass Index (BMI)</p>
+                        <p class="text-base font-bold text-white mt-1">
+                            <span id="bmiResult">Geli xogtaada</span>
+                        </p>
+                    </div>
+                    <div id="bmiIconBg" class="w-10 h-10 bg-cardBg rounded-xl flex items-center justify-center border border-borderColor">
+                        <span id="bmiIcon" class="text-lg">📊</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- COLUMN 2: Goals & Progress -->
+        <div class="space-y-6 flex flex-col justify-start">
+            <!-- Metrics & Needs (Baahida Jidhkaaga) -->
+            <section class="bg-cardBg p-6 sm:p-8 rounded-3xl border border-borderColor flex flex-col justify-between">
+                <div>
+                    <h3 class="text-2xl font-bold text-primary mb-8">Baahida Jidhaaga</h3>
+
+                    <!-- Active States Panel (Hidden initially) -->
+                    <div id="activeMetricsContainer" class="hidden space-y-4">
+                        <!-- Calories -->
+                        <div class="bg-inputBg border border-borderColor rounded-2xl p-5 flex items-center justify-between">
+                            <div>
+                                <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Cuntada Maanta</p>
+                                <p class="text-3xl font-extrabold text-white mt-1 tracking-tight">
+                                    <span id="caloriesResult">1,800</span> <span class="text-sm font-semibold text-gray-400 ml-1">Kcal</span>
+                                </p>
+                            </div>
+                            <div class="w-12 h-12 bg-cardBg rounded-xl flex items-center justify-center text-2xl">🥗</div>
+                        </div>
+
+                        <!-- Water -->
+                        <div class="bg-inputBg border border-borderColor rounded-2xl p-5 flex items-center justify-between">
+                            <div>
+                                <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Baahida Biyaha</p>
+                                <p class="text-3xl font-extrabold text-white mt-1 tracking-tight">
+                                    <span id="waterResult">3.2</span> <span class="text-sm font-semibold text-gray-400 ml-1">Litir</span>
+                                </p>
+                            </div>
+                            <div class="w-12 h-12 bg-cardBg rounded-xl flex items-center justify-center text-2xl">💧</div>
+                        </div>
+
+                        <!-- Exercise -->
+                        <div class="bg-inputBg border border-borderColor rounded-2xl p-5 flex items-center justify-between">
+                            <div>
+                                <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Jimicsiga Maanta</p>
+                                <p class="text-2xl font-extrabold text-white mt-1 tracking-tight flex items-baseline gap-2">
+                                    <span id="exerciseResultVal">45 daqiiqo</span>
+                                    <span id="exerciseTypeVal" class="text-[11px] font-semibold text-gray-400 hidden sm:inline-block">(Cardio + Lift)</span>
+                                </p>
+                            </div>
+                            <div class="w-12 h-12 bg-cardBg rounded-xl flex items-center justify-center text-2xl">🤸‍♂️</div>
+                        </div>
+                    </div>
+
+                    <!-- Placeholder State Panel (Shown when app is first opened) -->
+                    <div id="metricsPlaceholder" class="flex flex-col items-center justify-center text-center py-12 px-4 bg-inputBg/40 rounded-2xl border border-dashed border-borderColor">
+                        <div class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mb-5 animate-pulse">
+                            <i data-lucide="bar-chart-2" class="w-8 h-8"></i>
+                        </div>
+                        <h4 class="text-sm font-bold text-white mb-2">Qorshe Diyaar Ma Ahan</h4>
+                        <p class="text-xs text-gray-400 leading-relaxed max-w-[240px]">Fadlan marka hore ku buuxi xogtaada jidhka sanduuqa bidixda si aad halkan uga hesho baahidaada rasmiga ah.</p>
+                    </div>
+                </div>
+
+                <!-- Macros Breakdown -->
+                <div class="mt-8 pt-6 border-t border-borderColor">
+                    <h4 class="text-[11px] font-bold text-gray-300 uppercase tracking-widest mb-5 flex items-center gap-2">
+                        <i data-lucide="pie-chart" class="w-4 h-4 text-primary"></i>
+                        Xisaabinta Macro-yada (Macros)
+                    </h4>
+                    
+                    <div id="macrosInteractiveContainer">
+                        <!-- Placeholder visual for macros bar -->
+                        <div id="macrosPlaceholderBars" class="space-y-4 py-3 text-center text-xs text-gray-500 italic">
+                            Geli xogta jidhkaaga si loo xisaabiyo Protein-ka, Carbs-ka iyo Fats-ka.
+                        </div>
+
+                        <!-- Active Macro progress bars (Hidden initially) -->
+                        <div id="activeMacrosList" class="hidden space-y-5">
+                            <!-- Protein -->
+                            <div>
+                                <div class="flex justify-between text-xs font-bold mb-2">
+                                    <span class="text-gray-400 flex items-center gap-2"><span class="text-sm">🥩</span> Borotiin (Protein)</span>
+                                    <span id="macroProtein" class="text-primary">135g</span>
+                                </div>
+                                <div class="w-full h-2 bg-inputBg rounded-full overflow-hidden">
+                                    <div id="barProtein" class="h-full bg-primary rounded-full transition-all duration-1000" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                            <!-- Carbs -->
+                            <div>
+                                <div class="flex justify-between text-xs font-bold mb-2">
+                                    <span class="text-gray-400 flex items-center gap-2"><span class="text-sm">🍚</span> Karbohaydrayt (Carbs)</span>
+                                    <span id="macroCarb" class="text-[#FF9800]">180g</span>
+                                </div>
+                                <div class="w-full h-2 bg-inputBg rounded-full overflow-hidden">
+                                    <div id="barCarb" class="h-full bg-[#FF9800] rounded-full transition-all duration-1000" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                            <!-- Fats -->
+                            <div>
+                                <div class="flex justify-between text-xs font-bold mb-2">
+                                    <span class="text-gray-400 flex items-center gap-2"><span class="text-sm">🥑</span> Dufan Caafimaad (Fats)</span>
+                                    <span id="macroFat" class="text-[#00E676]">60g</span>
+                                </div>
+                                <div class="w-full h-2 bg-inputBg rounded-full overflow-hidden">
+                                    <div id="barFat" class="h-full bg-[#00E676] rounded-full transition-all duration-1000" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Weight Chart -->
+            <div class="bg-cardBg p-6 rounded-3xl border border-borderColor flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                            <i data-lucide="trending-down" class="text-primary w-4 h-4"></i>
+                            Isbeddelka Miisaanka
+                        </h3>
+                        <span class="text-[9px] text-gray-500 font-bold tracking-widest uppercase">Male-Awaal</span>
+                    </div>
+                    <p class="text-[11px] text-gray-400 leading-relaxed">Miisaankaaga ee la saadaalinayo 4 asbuuc ee soo socota.</p>
+                </div>
+                
+                <div class="bg-inputBg rounded-2xl p-4 mt-4 h-24 flex flex-col justify-end">
+                    <div class="flex items-end gap-3 h-full px-2">
+                        <div class="w-full flex flex-col items-center h-full justify-end">
+                            <div id="barWeek1" class="w-full bg-[#363D43] h-[90%] rounded-t-md transition-all duration-1000"></div>
+                        </div>
+                        <div class="w-full flex flex-col items-center h-full justify-end">
+                            <div id="barWeek2" class="w-full bg-[#363D43] h-[80%] rounded-t-md transition-all duration-1000"></div>
+                        </div>
+                        <div class="w-full flex flex-col items-center h-full justify-end">
+                            <div id="barWeek3" class="w-full bg-[#363D43] h-[70%] rounded-t-md transition-all duration-1000"></div>
+                        </div>
+                        <div class="w-full flex flex-col items-center h-full justify-end">
+                            <div id="barCurrent" class="w-full bg-primary h-[60%] rounded-t-md transition-all duration-1000 shadow-[0_-5px_15px_rgba(255,193,7,0.3)]"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-between text-[9px] text-gray-500 mt-2 px-2 font-bold">
+                    <span>Asbuuc 1</span>
+                    <span>Asbuuc 2</span>
+                    <span>Asbuuc 3</span>
+                    <span class="text-primary">Asbuuc 4</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- COLUMN 3: Tasks & Tracking -->
+        <div class="space-y-6 flex flex-col justify-start">
+            <!-- Dynamic Habits Planner (Qorshaha Maalinlaha) -->
+            <div class="bg-cardBg p-6 rounded-3xl border border-borderColor flex flex-col max-h-[350px]">
+                <div class="flex justify-between items-center mb-4 shrink-0">
+                    <h3 class="text-xs font-bold text-white uppercase tracking-widest flex items-center gap-2">
+                        <i data-lucide="list-todo" class="text-primary w-4 h-4"></i>
+                        Qorshaha & Caadooyinka
+                    </h3>
+                    <span id="habitProgress" class="text-[10px] bg-primary/20 text-primary px-2.5 py-1 rounded-md font-bold">0/3</span>
+                </div>
+
+                <!-- Add New Habit Input -->
+                <div class="flex gap-2 mb-4 shrink-0">
+                    <input id="newHabitInput" type="text" placeholder="Ku dar qorsho cusub (Tusaale: Soco 20 dac)..." class="flex-1 bg-inputBg border border-borderColor rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-primary placeholder-gray-500 transition-all">
+                    <button onclick="addHabit()" class="bg-primary text-[#131619] w-12 h-12 rounded-xl hover:bg-primaryHover transition-all flex items-center justify-center shrink-0">
+                        <i data-lucide="plus" class="w-5 h-5 font-bold"></i>
+                    </button>
+                </div>
+
+                <!-- Habits List -->
+                <div id="habitsContainer" class="space-y-2.5 overflow-y-auto pr-1 flex-1 pb-1 custom-scrollbar">
+                    <!-- Javascript generates items here -->
+                </div>
+            </div>
+
+            <!-- COMPACT & SLEEK CALENDAR WIDGET (Sleek & Interactive) -->
+            <div class="bg-cardBg p-6 rounded-3xl border border-borderColor flex flex-col">
+                <div class="flex justify-between items-center mb-4 shrink-0">
+                    <h3 class="text-xs font-bold text-white uppercase tracking-widest flex items-center gap-2">
+                        <i data-lucide="calendar" class="text-primary w-4 h-4"></i>
+                        Kalandarka
+                    </h3>
+                    
+                    <!-- Month Navigation -->
+                    <div class="flex items-center gap-1 bg-inputBg p-1 rounded-xl border border-borderColor">
+                        <button onclick="changeMonth(-1)" class="p-1 hover:bg-cardBg rounded-lg transition-colors text-gray-400 hover:text-white">
+                            <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
+                        </button>
+                        <span id="currentMonthYear" class="text-[9px] font-extrabold text-white px-1 text-center min-w-[70px] uppercase tracking-wider">
+                            Juun 2026
+                        </span>
+                        <button onclick="changeMonth(1)" class="p-1 hover:bg-cardBg rounded-lg transition-colors text-gray-400 hover:text-white">
+                            <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Days Header (Compact) -->
+                <div class="grid grid-cols-7 gap-1 text-center text-[9px] font-extrabold text-gray-500 uppercase tracking-widest mb-2 shrink-0">
+                    <div>Ax</div><div>Is</div><div>Ta</div><div>Ar</div><div>Kh</div><div>Ji</div><div>Sa</div>
+                </div>
+                
+                <!-- Calendar Grid (Compact Days) -->
+                <div id="calendarDays" class="grid grid-cols-7 gap-1.5 text-center">
+                    <!-- JS Generated Calendar -->
+                </div>
+
+                <!-- Active Appointments List Under Calendar (NEW UPGRADED LIST) -->
+                <div id="activeBookingsPreview" class="mt-4 pt-3 border-t border-borderColor hidden">
+                    <h4 class="text-[9px] text-gray-400 uppercase tracking-widest font-extrabold mb-3 flex items-center justify-between">
+                        <span class="flex items-center gap-1">
+                            <i data-lucide="clock" class="w-3.5 h-3.5 text-primary"></i> Balimaha Kuugu Qoran:
+                        </span>
+                        <span id="bookingCountBadge" class="text-[8px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full font-bold">0</span>
+                    </h4>
+                    <!-- Scrollable list of all active calendar inputs -->
+                    <div id="calendarBookingsList" class="space-y-2 max-h-[140px] overflow-y-auto pr-1 custom-scrollbar">
+                        <!-- JS dynamically renders all appointments here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Meal Plan Section (Qorshaha Cuntada 3-da Waqti) - DYNAMIC -->
+    <section id="mealPlanSection" class="hidden max-w-[1400px] w-full mx-auto bg-cardBg p-6 sm:p-8 rounded-3xl border border-borderColor mb-12 transition-all duration-500">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-[#2D3339] pb-6">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary border border-primary/20">
+                    <i data-lucide="utensils" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-white">Qorshaha Cuntada Maanta</h2>
+                    <p class="text-[11px] text-gray-400 mt-1">Halkan waad ku darsan kartaa ama ka tiri kartaa cuntooyinka aad jeceshahay.</p>
+                </div>
+            </div>
+            <div class="bg-inputBg border border-borderColor px-4 py-2.5 rounded-xl text-xs text-white font-bold flex items-center gap-2">
+                <i data-lucide="calculator" class="w-4 h-4 text-primary"></i>
+                Guud ahaan: <span id="mealCalorieLabelVal" class="text-primary text-sm">1,800</span> Kcal
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Breakfast (Qurac) -->
+            <div class="bg-inputBg border border-borderColor hover:border-primary/50 transition-colors duration-300 rounded-2xl p-6 flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-center mb-5">
+                        <span class="text-xs font-extrabold text-primary uppercase tracking-widest flex items-center gap-2">
+                            <span class="text-lg">🍳</span> 1. Qurac
+                        </span>
+                        <span id="quracKcal" class="text-[11px] font-bold text-gray-300 bg-cardBg border border-borderColor px-3 py-1 rounded-full">450 Kcal</span>
+                    </div>
+                    
+                    <ul id="quracList" class="space-y-3 text-xs text-gray-300 font-medium">
+                        <!-- JS generated list -->
+                    </ul>
+                </div>
+                
+                <!-- Add New Item Row -->
+                <div class="mt-5 pt-4 border-t border-borderColor">
+                    <div class="flex gap-2">
+                        <input type="text" id="newQuracName" placeholder="Ku dar cunto..." class="flex-1 bg-cardBg border border-borderColor rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-primary transition-colors">
+                        <input type="text" id="newQuracPortion" placeholder="Cadadka" class="w-20 bg-cardBg border border-borderColor rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-primary transition-colors">
+                        <button onclick="addMealItem('qurac')" class="bg-primary hover:bg-primaryHover text-[#131619] p-2.5 rounded-xl transition-colors shrink-0">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lunch (Qado) -->
+            <div class="bg-inputBg border border-borderColor hover:border-[#FF9800]/50 transition-colors duration-300 rounded-2xl p-6 flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-center mb-5">
+                        <span class="text-xs font-extrabold text-[#FF9800] uppercase tracking-widest flex items-center gap-2">
+                            <span class="text-lg">🍗</span> 2. Qado
+                        </span>
+                        <span id="qadoKcal" class="text-[11px] font-bold text-gray-300 bg-cardBg border border-borderColor px-3 py-1 rounded-full">720 Kcal</span>
+                    </div>
+                    
+                    <ul id="qadoList" class="space-y-3 text-xs text-gray-300 font-medium">
+                        <!-- JS generated list -->
+                    </ul>
+                </div>
+
+                <!-- Add New Item Row -->
+                <div class="mt-5 pt-4 border-t border-borderColor">
+                    <div class="flex gap-2">
+                        <input type="text" id="newQadoName" placeholder="Ku dar cunto..." class="flex-1 bg-cardBg border border-borderColor rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#FF9800] transition-colors">
+                        <input type="text" id="newQadoPortion" placeholder="Cadadka" class="w-20 bg-cardBg border border-borderColor rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#FF9800] transition-colors">
+                        <button onclick="addMealItem('qado')" class="bg-[#FF9800] hover:bg-[#E68A00] text-[#131619] p-2.5 rounded-xl transition-colors shrink-0">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dinner (Casho) -->
+            <div class="bg-inputBg border border-borderColor hover:border-[#00E676]/50 transition-colors duration-300 rounded-2xl p-6 flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-center mb-5">
+                        <span class="text-xs font-extrabold text-[#00E676] uppercase tracking-widest flex items-center gap-2">
+                            <span class="text-lg">🐟</span> 3. Casho
+                        </span>
+                        <span id="cashoKcal" class="text-[11px] font-bold text-gray-300 bg-cardBg border border-borderColor px-3 py-1 rounded-full">630 Kcal</span>
+                    </div>
+                    
+                    <ul id="cashoList" class="space-y-3 text-xs text-gray-300 font-medium">
+                        <!-- JS generated list -->
+                    </ul>
+                </div>
+
+                <!-- Add New Item Row -->
+                <div class="mt-5 pt-4 border-t border-borderColor">
+                    <div class="flex gap-2">
+                        <input type="text" id="newCashoName" placeholder="Ku dar cunto..." class="flex-1 bg-cardBg border border-borderColor rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#00E676] transition-colors">
+                        <input type="text" id="newCashoPortion" placeholder="Cadadka" class="w-20 bg-cardBg border border-borderColor rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#00E676] transition-colors">
+                        <button onclick="addMealItem('casho')" class="bg-[#00E676] hover:bg-[#00C853] text-[#131619] p-2.5 rounded-xl transition-colors shrink-0">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Weekly Planner Section (Qorshaha Asbuuca) -->
+    <section id="weeklyPlannerSection" class="hidden max-w-[1400px] w-full mx-auto bg-cardBg p-6 sm:p-8 rounded-3xl border border-borderColor mb-12 transition-all duration-500">
+        <div class="flex items-center gap-3 mb-6 border-b border-[#2D3339] pb-4">
+            <div class="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
+                <i data-lucide="calendar-days" class="w-5 h-5"></i>
+            </div>
+            <div>
+                <h2 class="text-xl font-bold text-white">Qorshaha Asbuuca <span class="text-xs text-gray-500 font-normal ml-1">(Weekly Planner)</span></h2>
+                <p class="text-[11px] text-gray-400 mt-1">Jadwalkaaga jimicsiga ee 7-da maalmood iyadoo loo eegayo hadafkaaga gaarka ah.</p>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4" id="weeklyGrid">
+            <!-- Dynamically populated by JavaScript -->
+        </div>
+    </section>
+
+    <!-- AI Coach Section -->
+    <section class="max-w-[1400px] w-full mx-auto bg-cardBg p-6 sm:p-8 rounded-3xl border border-borderColor mb-12">
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 border-b border-[#2D3339] pb-6">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary border border-primary/20">
+                    <i data-lucide="sparkles" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-extrabold text-white">Kheyre Fit AI Coach</h2>
+                    <p class="text-[11px] text-gray-400 mt-1">Macalinkaaga gaarka ah ee cuntada iyo jimicsiga oo ay ku shaqaynayso AI.</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="document.getElementById('apiSettings').classList.toggle('hidden')" class="bg-inputBg hover:bg-[#2A3036] border border-borderColor px-4 py-2 rounded-full text-xs text-gray-300 font-bold flex items-center gap-2 transition-colors">
+                    <i data-lucide="settings" class="w-3.5 h-3.5"></i>
+                    <span>API Keys</span>
+                </button>
+                <div class="bg-[#122A22] border border-[#1A4032] px-4 py-2 rounded-full text-xs text-[#4ADE80] font-bold flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-[#22C55E]"></span>
+                    <span id="aiEngineLabel">Local Smart Brain</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Settings (Hidden by default) -->
+        <div id="apiSettings" class="hidden mb-6 bg-inputBg border border-borderColor p-4 rounded-2xl">
+            <p class="text-xs text-gray-400 mb-3">Geli Gemini API Key si aad u isticmaasho AI-ga rasmiga ah.</p>
+            <div class="flex gap-2">
+                <input id="userApiKeyInput" type="password" placeholder="AIzaSy..." class="flex-1 bg-cardBg border border-borderColor rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-primary">
+                <button onclick="saveApiKey()" class="bg-primary text-[#131619] font-bold px-4 rounded-xl text-xs">Save</button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left: Quick Prompts -->
+            <div class="space-y-4">
+                <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                    <i data-lucide="help-circle" class="w-4 h-4 text-primary"></i>
+                    Weydii Su'aalo Diyaar ah
+                </h3>
+                <button onclick="askAICoach('Maxaan ku beddeli karaa boorashka subaxdii oo Soomaali ah?')" class="w-full text-left bg-inputBg hover:bg-[#2A3036] border border-borderColor p-4 rounded-2xl text-xs text-gray-200 transition-all flex justify-between items-center group">
+                    <span class="font-medium flex items-center gap-2"><span class="text-base">🔄</span> Beddelka Boorashka (Subaxda)</span>
+                    <i data-lucide="chevron-right" class="w-4 h-4 text-gray-500 group-hover:text-primary transition-colors"></i>
+                </button>
+                <button onclick="askAICoach('I sii 3 talo oo muhiim ah oo ku saabsan sida loo dhimo caloosha.')" class="w-full text-left bg-inputBg hover:bg-[#2A3036] border border-borderColor p-4 rounded-2xl text-xs text-gray-200 transition-all flex justify-between items-center group">
+                    <span class="font-medium flex items-center gap-2"><span class="text-base">🔥</span> Sida caloosha loo dhimo</span>
+                    <i data-lucide="chevron-right" class="w-4 h-4 text-gray-500 group-hover:text-primary transition-colors"></i>
+                </button>
+                <button onclick="askAICoach('Ma u baahanahay inaan qaato supplements haddii aan doonayo inaan miisaanka dhibo?')" class="w-full text-left bg-inputBg hover:bg-[#2A3036] border border-borderColor p-4 rounded-2xl text-xs text-gray-200 transition-all flex justify-between items-center group">
+                    <span class="font-medium flex items-center gap-2"><span class="text-base">💊</span> Isticmaalka supplements-ka</span>
+                    <i data-lucide="chevron-right" class="w-4 h-4 text-gray-500 group-hover:text-primary transition-colors"></i>
+                </button>
+            </div>
+
+            <!-- Right: Chat Box -->
+            <div class="lg:col-span-2 bg-inputBg border border-borderColor rounded-3xl p-6 flex flex-col">
+                <!-- Chat Output -->
+                <div id="aiChatBox" class="flex-1 space-y-4 overflow-y-auto min-h-[200px] max-h-[250px] mb-4 pr-2 text-xs custom-scrollbar">
+                    <div class="flex items-start gap-4 p-5 rounded-2xl bg-[#1A1E22] border border-[#2D3339]">
+                        <div class="w-10 h-10 rounded-xl bg-[#3E3422] flex items-center justify-center text-primary font-extrabold text-sm shrink-0">AI</div>
+                        <div>
+                            <p class="font-bold text-white mb-1.5">Macalinka AI</p>
+                            <p class="text-gray-300 leading-relaxed">Nabad ma ku wehelisaa! Waxaan ahay macalinkaaga cuntada iyo jimicsiga ee Kheyre Fit. Xisaabi qorshahaaga si aan u garto xaaladaada gaarka ah, ama halkan igula hadal oo i weydii wax kasta oo kusaabsan cuntooyinka Soomaalida, jimicsiga, iyo qaab nololeedka caafimaadka leh!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Input -->
+                <div class="flex gap-3 bg-[#1A1E22] p-2 rounded-2xl border border-borderColor mt-auto">
+                    <input id="aiUserInput" type="text" placeholder="I weydii su'aal ku saabsan cuntada iyo jimicsiga..." class="flex-1 bg-transparent px-4 py-2 text-xs text-white focus:outline-none placeholder-gray-500">
+                    <button id="sendBtn" onclick="sendCustomQuestion()" class="bg-primary hover:bg-primaryHover text-[#131619] font-bold px-6 py-3 rounded-xl text-xs flex items-center gap-2 transition-colors">
+                        <span>Weydii</span>
+                        <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Script Section -->
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+
+        // ----------------------------------------------------
+        // Toast Notification System
+        // ----------------------------------------------------
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = message;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // ----------------------------------------------------
+        // Google Auth Implementation
+        // ----------------------------------------------------
+        function decodeJwtResponse(token) {
+            let base64Url = token.split('.')[1];
+            let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            let jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            return JSON.parse(jsonPayload);
+        }
+
+        function handleCredentialResponse(response) {
+            const responsePayload = decodeJwtResponse(response.credential);
+            
+            // Qari badhanka Google, soona bandhig sawirka iyo magaca
+            document.getElementById('googleAuthBtn').classList.add('hidden');
+            const userProfile = document.getElementById('userProfile');
+            userProfile.classList.remove('hidden');
+            userProfile.classList.add('flex');
+            
+            // Geli xogta Profile-ka
+            document.getElementById('userNameHeader').innerText = responsePayload.given_name || responsePayload.name;
+            document.getElementById('userImg').src = responsePayload.picture;
+            
+            // Buuxi sanduuqa magaca ee xisaabiyaha hoose
+            document.getElementById('name').value = responsePayload.given_name || responsePayload.name;
+            
+            showToast("Ku soo dhawoow, " + (responsePayload.given_name || responsePayload.name) + "!");
+            lucide.createIcons();
+        }
+
+        function handleSignOut() {
+            // Dib u soo celi badhanka Google
+            document.getElementById('googleAuthBtn').classList.remove('hidden');
+            const userProfile = document.getElementById('userProfile');
+            userProfile.classList.add('hidden');
+            userProfile.classList.remove('flex');
+            
+            // Masax magaca sanduuqa xogta
+            document.getElementById('name').value = "";
+            
+            showToast("Si guul ah ayaad uga baxday (Logged out).");
+        }
+
+        // ----------------------------------------------------
+        // Dynamic Habits (Caadooyinka & Qorshaha) Logic
+        // ----------------------------------------------------
+        let habits = [
+            { id: 1, text: 'Cabbay ugu yaraan 3 Litir oo biyo ah', done: false },
+            { id: 2, text: 'Dhammaystiray jimicsiga maanta', done: false },
+            { id: 3, text: 'Qaatay Cuntadii waqtigeeda', done: false }
+        ];
+
+        function renderHabits() {
+            const container = document.getElementById('habitsContainer');
+            container.innerHTML = '';
+            let completed = 0;
+
+            if (habits.length === 0) {
+                container.innerHTML = `<p class="text-[11px] text-gray-500 text-center py-4">Wax qorsho ah kuma jiraan halkan. Ku dar mid cusub kor!</p>`;
+            } else {
+                habits.forEach(h => {
+                    if (h.done) completed++;
+                    container.innerHTML += `
+                        <div class="flex items-center gap-3 bg-inputBg border border-borderColor p-3.5 rounded-xl transition-colors hover:border-gray-600 group">
+                            <input type="checkbox" onchange="toggleHabit(${h.id})" ${h.done ? 'checked' : ''} class="w-4 h-4 rounded cursor-pointer bg-cardBg border-borderColor shrink-0">
+                            <span class="text-[11px] font-medium flex-1 ${h.done ? 'line-through text-gray-500' : 'text-gray-300'} transition-all">${h.text}</span>
+                            <button onclick="removeHabit(${h.id})" class="text-gray-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-cardBg shrink-0">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                    `;
+                });
+            }
+
+            document.getElementById('habitProgress').innerText = `${completed}/${habits.length}`;
+            lucide.createIcons();
+        }
+
+        function addHabit() {
+            const input = document.getElementById('newHabitInput');
+            const val = input.value.trim();
+            if (val) {
+                habits.push({ id: Date.now(), text: val, done: false });
+                input.value = '';
+                renderHabits();
+                showToast("Qorsho cusub ayaa lagu daray!");
+            }
+        }
+
+        document.getElementById('newHabitInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') addHabit();
+        });
+
+        function toggleHabit(id) {
+            const habit = habits.find(h => h.id === id);
+            if (habit) {
+                habit.done = !habit.done;
+                if(habit.done) showToast("Shaqo Wacan! Qorshe waa la dhamaystiray.");
+                renderHabits();
+            }
+        }
+
+        function removeHabit(id) {
+            habits = habits.filter(h => h.id !== id);
+            renderHabits();
+        }
+
+        // ----------------------------------------------------
+        // Calendar (Kalandarka) & Booking Storage Logic
+        // ----------------------------------------------------
+        let currentCalDate = new Date();
+        const monthNamesSomali = ["Janaayo", "Febraayo", "Maarso", "Abriil", "Maajo", "Juun", "Luulyo", "Agoosto", "Sebteembar", "Oktoobar", "Nofeembar", "Diseembar"];
+        
+        let calendarStore = {
+            "2026-05-10": { title: "Jimicsi gaar ah", time: "09:00", notes: "Tababar dhabarka ah", done: true },
+            "2026-05-14": { title: "", time: "", notes: "", done: true },
+            "2026-05-18": { title: "", time: "", notes: "", done: true },
+            "2026-05-22": { title: "La kulanka tababaraha", time: "16:30", notes: "Cabbiraada miisaanka cusub", done: false }
+        };
+
+        let activeSelectedDayStr = null;
+
+        function renderCalendar() {
+            const year = currentCalDate.getFullYear();
+            const month = currentCalDate.getMonth();
+
+            document.getElementById('currentMonthYear').innerText = `${monthNamesSomali[month]} ${year}`;
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            const calendarDays = document.getElementById('calendarDays');
+            calendarDays.innerHTML = '';
+
+            for (let i = 0; i < firstDay; i++) {
+                calendarDays.innerHTML += `<div class="aspect-square"></div>`;
+            }
+
+            const today = new Date();
+
+            for (let i = 1; i <= daysInMonth; i++) {
+                const isToday = i === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+                
+                const bgClass = isToday 
+                    ? 'bg-primary text-[#131619] font-extrabold shadow-[0_0_12px_rgba(255,193,7,0.35)] border-primary' 
+                    : 'bg-inputBg text-gray-300 hover:bg-[#2D3339] border-[#2D3339] hover:text-white cursor-pointer';
+
+                const dateKey = `${year}-${String(month).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                const storedDayData = calendarStore[dateKey];
+
+                let indicator = '';
+                if (storedDayData) {
+                    if (storedDayData.done) {
+                        indicator = '<div class="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-[#00E676] shadow-[0_0_4px_#00E676]"></div>';
+                    } else if (storedDayData.title || storedDayData.notes) {
+                        indicator = '<div class="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_4px_#FFC107]"></div>';
+                    }
+                }
+
+                calendarDays.innerHTML += `
+                    <div onclick="clickCalendarDay(${i}, ${month}, ${year})" class="${bgClass} rounded-xl text-[11px] transition-all duration-300 flex flex-col items-center justify-center border aspect-square relative group">
+                        <span class="group-hover:scale-110 transition-transform">${i}</span>
+                        ${indicator}
+                    </div>
+                `;
+            }
+            updateUpcomingBookingPreview();
+        }
+
+        function changeMonth(dir) {
+            currentCalDate.setMonth(currentCalDate.getMonth() + dir);
+            renderCalendar();
+        }
+
+        function clickCalendarDay(day, month, year) {
+            const dateKey = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            activeSelectedDayStr = dateKey;
+
+            document.getElementById('selectedDateLabel').innerText = `${day} ${monthNamesSomali[month]} ${year}`;
+
+            const existing = calendarStore[dateKey] || { title: "", time: "", notes: "", done: false };
+
+            document.getElementById('apptTitle').value = existing.title || "";
+            document.getElementById('apptTime').value = existing.time || "";
+            document.getElementById('apptDone').checked = existing.done || false;
+            document.getElementById('apptNotes').value = existing.notes || "";
+
+            const modal = document.getElementById('calendarModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.querySelector('div').classList.remove('scale-95');
+            }, 10);
+            
+            lucide.createIcons();
+        }
+
+        function closeCalendarModal() {
+            const modal = document.getElementById('calendarModal');
+            modal.querySelector('div').classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 150);
+        }
+
+        function saveCalendarData() {
+            if (!activeSelectedDayStr) return;
+
+            const title = document.getElementById('apptTitle').value.trim();
+            const time = document.getElementById('apptTime').value;
+            const done = document.getElementById('apptDone').checked;
+            const notes = document.getElementById('apptNotes').value.trim();
+
+            if (title || time || done || notes) {
+                calendarStore[activeSelectedDayStr] = { title, time, done, notes };
+                showToast("Balan iyo xog cusub waa la diwaangeliyay!");
+            } else {
+                delete calendarStore[activeSelectedDayStr];
+            }
+
+            closeCalendarModal();
+            renderCalendar();
+        }
+
+        function deleteCalendarData() {
+            if (activeSelectedDayStr && calendarStore[activeSelectedDayStr]) {
+                delete calendarStore[activeSelectedDayStr];
+                showToast("Xogta maalintaas waa la tirtiray.");
+            }
+            closeCalendarModal();
+            renderCalendar();
+        }
+
+        function updateUpcomingBookingPreview() {
+            const previewCard = document.getElementById('activeBookingsPreview');
+            const bookingsList = document.getElementById('calendarBookingsList');
+            const badge = document.getElementById('bookingCountBadge');
+
+            bookingsList.innerHTML = ''; 
+
+            const sortedKeys = Object.keys(calendarStore).sort();
+            let count = 0;
+
+            sortedKeys.forEach(key => {
+                const item = calendarStore[key];
+                
+                const parts = key.split('-');
+                const y = parseInt(parts[0]);
+                const m = parseInt(parts[1]);
+                const d = parseInt(parts[2]);
+                const monthName = monthNamesSomali[m];
+
+                if (item.title || item.notes || item.done) {
+                    count++;
+                    const statusClass = item.done 
+                        ? 'border-emerald-500/20 bg-emerald-500/5 text-emerald-400' 
+                        : 'border-[#2D3339] bg-inputBg text-gray-300';
+
+                    const dotColor = item.done ? 'bg-[#00E676]' : 'bg-primary';
+                    const displayTitle = item.title || (item.done ? "Jimicsi waa la qabtay" : "Qoraal gaar ah");
+                    const notesExcerpt = item.notes ? `<p class="text-[9px] text-gray-500 italic mt-0.5 line-clamp-1">${item.notes}</p>` : '';
+
+                    bookingsList.innerHTML += `
+                        <div onclick="clickCalendarDay(${d}, ${m}, ${y})" class="border ${statusClass} p-2.5 rounded-xl text-[10px] flex flex-col justify-center cursor-pointer hover:border-primary/50 transition-all">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-1.5 font-bold">
+                                    <span class="w-1.5 h-1.5 rounded-full ${dotColor}"></span>
+                                    <span>${displayTitle}</span>
+                                </div>
+                                <span class="text-gray-500 font-semibold">${d} ${monthName} ${item.time ? '@ ' + item.time : ''}</span>
+                            </div>
+                            ${notesExcerpt}
+                        </div>
+                    `;
+                }
+            });
+
+            badge.innerText = count;
+
+            if (count > 0) {
+                previewCard.classList.remove('hidden');
+            } else {
+                previewCard.classList.add('hidden');
+            }
+            lucide.createIcons();
+        }
+
+        renderHabits();
+        renderCalendar();
+
+
+        // ----------------------------------------------------
+        // Existing State & UI Logic (Form, Macros, AI)
+        // ----------------------------------------------------
+        let selectedGender = 'rag';
+        let selectedGoal = 'loss';
+        let currentCalculatedState = null;
+        let globalApiKey = "";
+
+        // Meal Plans Dynamic State
+        let dynamicMealPlans = {
+            qurac: [],
+            qado: [],
+            casho: []
+        };
+
+        function setGender(gender) {
+            selectedGender = gender;
+            const btnRag = document.getElementById('btnRag');
+            const btnDumar = document.getElementById('btnDumar');
+
+            const activeClass = "py-3 text-xs rounded-xl border border-[#FFC107] bg-[#FFC107]/10 text-[#FFC107] font-bold transition-all flex justify-center items-center gap-1.5";
+            const inactiveClass = "py-3 text-xs rounded-xl border border-[#2D3339] bg-[#23272B] text-gray-400 hover:text-white transition-all flex justify-center items-center gap-1.5";
+
+            btnRag.className = gender === 'rag' ? activeClass : inactiveClass;
+            btnDumar.className = gender === 'dumar' ? activeClass : inactiveClass;
+            
+            lucide.createIcons(); 
+        }
+
+        function setGoal(goal) {
+            selectedGoal = goal;
+            const goalLoss = document.getElementById('goalLoss');
+            const goalMaintain = document.getElementById('goalMaintain');
+            const goalGain = document.getElementById('goalGain');
+
+            const activeClass = "p-3.5 text-center rounded-xl border border-[#FFC107] bg-[#FFC107]/10 text-[#FFC107] font-bold transition-all text-xs flex flex-col items-center gap-2";
+            const inactiveClass = "p-3.5 text-center rounded-xl border border-[#2D3339] bg-[#23272B] text-gray-400 hover:text-white transition-all text-xs flex flex-col items-center gap-2";
+
+            goalLoss.className = goal === 'loss' ? activeClass : inactiveClass;
+            goalMaintain.className = goal === 'maintain' ? activeClass : inactiveClass;
+            goalGain.className = goal === 'gain' ? activeClass : inactiveClass;
+            
+            lucide.createIcons();
+            if(document.getElementById('age').value) calculatePlan();
+        }
+
+        function calculatePlan() {
+            const name = document.getElementById('name').value.trim() || "Saaxiib";
+            const age = parseInt(document.getElementById('age').value);
+            const weight = parseFloat(document.getElementById('weight').value);
+            const height = parseFloat(document.getElementById('height').value);
+            const activityLevel = parseFloat(document.getElementById('activityLevel').value);
+            const errorBox = document.getElementById('errorBox');
+
+            if (!age || !weight || !height) {
+                errorBox.classList.remove('hidden');
+                return;
+            } else {
+                errorBox.classList.add('hidden');
+                showToast("Xogtaada si guul ah ayaa loo xisaabiyay!");
+            }
+
+            document.getElementById('metricsPlaceholder').classList.add('hidden');
+            document.getElementById('activeMetricsContainer').classList.remove('hidden');
+            document.getElementById('macrosPlaceholderBars').classList.add('hidden');
+            document.getElementById('activeMacrosList').classList.remove('hidden');
+
+            const heightInMeters = height / 100;
+            const bmi = weight / (heightInMeters * heightInMeters);
+            let bmiStatus = ""; let bmiIconBg = "bg-inputBg"; let textClr = "text-white";
+
+            if (bmi < 18.5) { bmiStatus = "Miisaan Fudud"; textClr="text-amber-400"; bmiIconBg="bg-[#3A2A1A] border-[#664622]"; } 
+            else if (bmi < 25) { bmiStatus = "Heer Caadi ah"; textClr="text-green-400"; bmiIconBg="bg-[#122A22] border-[#1A4032]"; } 
+            else if (bmi < 30) { bmiStatus = "Miisaan Dhaaf"; textClr="text-orange-400"; bmiIconBg="bg-[#3A2114] border-[#66351B]"; } 
+            else { bmiStatus = "Buurni Aad ah"; textClr="text-red-400"; bmiIconBg="bg-[#3A141A] border-[#66202A]"; }
+
+            let bmr = selectedGender === 'rag' 
+                ? (10 * weight) + (6.25 * height) - (5 * age) + 5
+                : (10 * weight) + (6.25 * height) - (5 * age) - 161;
+
+            const tdee = bmr * activityLevel; 
+            let targetCalories = selectedGoal === 'loss' ? Math.round(tdee - 500) : selectedGoal === 'maintain' ? Math.round(tdee) : Math.round(tdee + 400);
+            if (targetCalories < 1200) targetCalories = 1200;
+
+            const waterIntake = (weight * 0.035).toFixed(1);
+            
+            let proteinGrams = Math.round(weight * (selectedGoal === 'loss' ? 2.2 : selectedGoal === 'maintain' ? 1.8 : 2.0));
+            let fatGrams = Math.round((targetCalories * 0.25) / 9);
+            let carbGrams = Math.round((targetCalories - (proteinGrams * 4) - (fatGrams * 9)) / 4);
+            if (carbGrams < 50) carbGrams = 50;
+
+            const totalMacroCals = (proteinGrams * 4) + (carbGrams * 4) + (fatGrams * 9);
+            const proteinPct = Math.min(Math.round(((proteinGrams * 4) / totalMacroCals) * 100), 100);
+            const carbPct = Math.min(Math.round(((carbGrams * 4) / totalMacroCals) * 100), 100);
+            const fatPct = Math.min(Math.round(((fatGrams * 9) / totalMacroCals) * 100), 100);
+
+            const graphVals = selectedGoal === 'loss' ? ['100%','88%','75%','60%'] 
+                          : selectedGoal === 'maintain' ? ['80%','80%','80%','80%'] 
+                          : ['60%','72%','85%','100%'];
+
+            document.getElementById('caloriesResult').innerText = targetCalories.toLocaleString();
+            document.getElementById('waterResult').innerText = waterIntake;
+            
+            document.getElementById('bmiResult').innerHTML = `${bmiStatus} <span class="text-xs text-gray-500 ml-1">(${bmi.toFixed(1)})</span>`;
+            document.getElementById('bmiResult').className = `text-base font-bold mt-1 ${textClr}`;
+            document.getElementById('bmiIconBg').className = `w-10 h-10 rounded-xl flex items-center justify-center border ${bmiIconBg}`;
+            
+            document.getElementById('macroProtein').innerText = proteinGrams + "g";
+            document.getElementById('macroCarb').innerText = carbGrams + "g";
+            document.getElementById('macroFat').innerText = fatGrams + "g";
+            document.getElementById('barProtein').style.width = proteinPct + "%";
+            document.getElementById('barCarb').style.width = carbPct + "%";
+            document.getElementById('barFat').style.width = fatPct + "%";
+
+            ['barWeek1', 'barWeek2', 'barWeek3', 'barCurrent'].forEach((id, index) => {
+                document.getElementById(id).style.height = graphVals[index];
+            });
+
+            currentCalculatedState = { name, goal: selectedGoal, targetCalories, waterIntake };
+            
+            calculateMealPortions(targetCalories);
+            generateWeeklyPlan(selectedGoal);
+        }
+
+        // ----------------------------------------------------
+        // Dynamic Meal Plan Implementation
+        // ----------------------------------------------------
+        function calculateMealPortions(calories) {
+            const breakfastCals = Math.round(calories * 0.25);
+            const lunchCals = Math.round(calories * 0.40);
+            const dinnerCals = Math.round(calories * 0.35);
+
+            document.getElementById('mealCalorieLabelVal').innerText = calories.toLocaleString();
+            document.getElementById('quracKcal').innerText = breakfastCals + " Kcal";
+            document.getElementById('qadoKcal').innerText = lunchCals + " Kcal";
+            document.getElementById('cashoKcal').innerText = dinnerCals + " Kcal";
+
+            let oatsGrams = 50; let eggsCount = "2 xabo"; let chickenGrams = 120; let cookedRiceGrams = 120; let fishGrams = 120; let avocadoAmount = "0.5 xabo";
+
+            if (calories < 1500) {
+                oatsGrams = 40; eggsCount = "2 xabo (caddaan)"; chickenGrams = 100; cookedRiceGrams = 100; fishGrams = 100; avocadoAmount = "0.25 xabo";
+            } else if (calories >= 1500 && calories < 2200) {
+                oatsGrams = 60; eggsCount = "2-3 xabo"; chickenGrams = 150; cookedRiceGrams = 150; fishGrams = 150; avocadoAmount = "0.5 xabo";
+            } else {
+                oatsGrams = 80; eggsCount = "3-4 xabo"; chickenGrams = 200; cookedRiceGrams = 220; fishGrams = 200; avocadoAmount = "1 xabo";
+            }
+
+            // Populate the dynamic list upon calculation
+            dynamicMealPlans.qurac = [
+                { name: "🥣 Boorash Oats", portion: oatsGrams + "g" },
+                { name: "🥚 Ukun (Borotiin)", portion: eggsCount },
+                { name: "🍎 Tufaax / Moos", portion: "1 xabo" }
+            ];
+
+            dynamicMealPlans.qado = [
+                { name: "🥩 Digaag ama Hilib Geel", portion: chickenGrams + "g" },
+                { name: "🍚 Bariis / Baasto Bunni", portion: cookedRiceGrams + "g" },
+                { name: "🥗 Salad & Khudaar", portion: "1 baaquli" }
+            ];
+
+            dynamicMealPlans.casho = [
+                { name: "🐟 Kalluun (ama Tuna)", portion: fishGrams + "g" },
+                { name: "🥑 Avokaado / Dufan", portion: avocadoAmount },
+                { name: "🥬 Khudaar Uumi leh", portion: "Bilaash" }
+            ];
+
+            renderAllMeals();
+
+            const mealPlanSection = document.getElementById('mealPlanSection');
+            mealPlanSection.classList.remove('hidden');
+        }
+
+        function renderAllMeals() {
+            renderMealList('qurac', 'quracList', 'text-primary');
+            renderMealList('qado', 'qadoList', 'text-[#FF9800]');
+            renderMealList('casho', 'cashoList', 'text-[#00E676]');
+            lucide.createIcons();
+        }
+
+        function renderMealList(mealType, containerId, colorClass) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            
+            if(dynamicMealPlans[mealType].length === 0) {
+                container.innerHTML = `<li class="text-center text-gray-500 py-3 text-[10px] italic">Wax cunto ah kuma jiraan...</li>`;
+                return;
+            }
+
+            dynamicMealPlans[mealType].forEach((item, index) => {
+                container.innerHTML += `
+                    <li class="flex justify-between items-center bg-cardBg border border-borderColor p-3 rounded-xl group relative overflow-hidden transition-all hover:border-gray-600">
+                        <div class="flex justify-between w-full pr-8">
+                            <span>${item.name}</span>
+                            <span class="font-extrabold ${colorClass}">${item.portion}</span>
+                        </div>
+                        <button onclick="removeMealItem('${mealType}', ${index})" class="absolute right-2 text-gray-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-inputBg">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </li>
+                `;
+            });
+        }
+
+        function addMealItem(mealType) {
+            let nameInput, portionInput;
+            if(mealType === 'qurac') { nameInput = 'newQuracName'; portionInput = 'newQuracPortion'; }
+            else if(mealType === 'qado') { nameInput = 'newQadoName'; portionInput = 'newQadoPortion'; }
+            else if(mealType === 'casho') { nameInput = 'newCashoName'; portionInput = 'newCashoPortion'; }
+
+            const nameVal = document.getElementById(nameInput).value.trim();
+            const portionVal = document.getElementById(portionInput).value.trim();
+
+            if(nameVal) {
+                // Prepend a little generic plate icon for custom additions
+                dynamicMealPlans[mealType].push({ name: '🍽️ ' + nameVal, portion: portionVal || '-' });
+                document.getElementById(nameInput).value = '';
+                document.getElementById(portionInput).value = '';
+                renderAllMeals();
+                showToast("Cunto cusub ayaa lagu daray!");
+            }
+        }
+
+        function removeMealItem(mealType, index) {
+            dynamicMealPlans[mealType].splice(index, 1);
+            renderAllMeals();
+            showToast("Cuntada waa la tirtiray.");
+        }
+
+        // Prevent enter keys from refreshing forms but acting as 'Add' 
+        ['newQuracName', 'newQuracPortion'].forEach(id => {
+            document.getElementById(id).addEventListener('keypress', e => { if (e.key === 'Enter') addMealItem('qurac'); });
+        });
+        ['newQadoName', 'newQadoPortion'].forEach(id => {
+            document.getElementById(id).addEventListener('keypress', e => { if (e.key === 'Enter') addMealItem('qado'); });
+        });
+        ['newCashoName', 'newCashoPortion'].forEach(id => {
+            document.getElementById(id).addEventListener('keypress', e => { if (e.key === 'Enter') addMealItem('casho'); });
+        });
+
+
+        // Weekly Plan
+        function generateWeeklyPlan(goal) {
+            const grid = document.getElementById('weeklyGrid');
+            const days = ['Sabti', 'Axad', 'Isniin', 'Talaado', 'Arbaco', 'Khamiis', 'Jimce'];
+            let plan = [];
+            
+            if (goal === 'loss') {
+                plan = [
+                    { icon: 'activity', title: 'Cardio & Core', desc: '45 daqiiqo orod ama baaskiil + Calool' },
+                    { icon: 'dumbbell', title: 'Upper Body', desc: 'Jimicsiga gacmaha & laabta (Miisaan)' },
+                    { icon: 'coffee', title: 'Nasasho Fudud', desc: 'Soco 30 daqiiqo / Soo kabasho' },
+                    { icon: 'dumbbell', title: 'Lower Body', desc: 'Jimicsiga lugaha & barida' },
+                    { icon: 'flame', title: 'HIIT Workout', desc: '20 daqiiqo oo jimicsi degdeg ah' },
+                    { icon: 'dumbbell', title: 'Full Body', desc: 'Jidhka oo dhan (Miisaan Fudud)' },
+                    { icon: 'coffee', title: 'Nasasho', desc: 'Nasasho buuxda (Recovery)' }
+                ];
+            } else if (goal === 'gain') {
+                plan = [
+                    { icon: 'dumbbell', title: 'Chest & Triceps', desc: 'Miisaan culus: Laabta iyo gacmaha dambe' },
+                    { icon: 'dumbbell', title: 'Back & Biceps', desc: 'Jiidis, dhabarka iyo gacmaha hore' },
+                    { icon: 'coffee', title: 'Nasasho', desc: 'Hurdo iyo cunto badan' },
+                    { icon: 'dumbbell', title: 'Legs & Core', desc: 'Squats, lugaha iyo caloosha' },
+                    { icon: 'dumbbell', title: 'Shoulders', desc: 'Garabka iyo cududa (Miisaan)' },
+                    { icon: 'dumbbell', title: 'Full Body', desc: 'Isku-dhafan (Compound movements)' },
+                    { icon: 'coffee', title: 'Nasasho', desc: 'Soo kabasho murqaha' }
+                ];
+            } else {
+                plan = [
+                    { icon: 'activity', title: 'Cardio', desc: '30 daqiiqo orod ama dabaal' },
+                    { icon: 'dumbbell', title: 'Upper Body', desc: 'Miisaan dhexdhexaad ah' },
+                    { icon: 'activity', title: 'Yoga / Dhaqdhaqaaq', desc: 'Jimicsi dabacsan oo fudud' },
+                    { icon: 'dumbbell', title: 'Lower Body', desc: 'Lugaha iyo murqaha hoose' },
+                    { icon: 'activity', title: 'Cardio Fudud', desc: 'Baaskiil ama socod dheer' },
+                    { icon: 'dumbbell', title: 'Full Body', desc: 'Jidhka oo dhan tababar' },
+                    { icon: 'coffee', title: 'Nasasho', desc: 'Nasasho buuxda' }
+                ];
+            }
+
+            grid.innerHTML = '';
+            days.forEach((day, i) => {
+                const dayPlan = plan[i];
+                const isRest = dayPlan.title.includes('Nasasho');
+                const borderClass = isRest ? 'border-borderColor opacity-70' : 'border-primary/20 hover:border-primary/60 hover:bg-[#1A1E22]';
+                const iconColor = isRest ? 'text-gray-500' : 'text-primary';
+
+                grid.innerHTML += `
+                    <div class="bg-inputBg border ${borderClass} rounded-2xl p-4 transition-all duration-300 flex flex-col h-full cursor-default group shadow-sm">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">${day}</span>
+                            <div class="p-1.5 rounded-lg ${isRest ? 'bg-cardBg' : 'bg-primary/10 group-hover:bg-primary/20'} transition-colors">
+                                <i data-lucide="${dayPlan.icon}" class="w-4 h-4 ${iconColor} group-hover:scale-110 transition-transform"></i>
+                            </div>
+                        </div>
+                        <h4 class="text-sm font-bold text-white mb-1.5">${dayPlan.title}</h4>
+                        <p class="text-[10px] text-gray-400 leading-relaxed">${dayPlan.desc}</p>
+                    </div>
+                `;
+            });
+
+            const section = document.getElementById('weeklyPlannerSection');
+            section.classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        // AI Chat Functions
+        function saveApiKey() {
+            const val = document.getElementById('userApiKeyInput').value.trim();
+            globalApiKey = val;
+            document.getElementById('aiEngineLabel').innerText = val ? "Gemini Pro" : "Local Smart Brain";
+            document.getElementById('apiSettings').classList.add('hidden');
+            showToast("Key-ga API waa la keydiyay.");
+        }
+
+        function appendMessage(sender, text) {
+            const box = document.getElementById('aiChatBox');
+            const isAI = sender === 'AI';
+            const div = document.createElement('div');
+            
+            div.className = `flex items-start gap-4 p-5 rounded-2xl border ${isAI ? 'bg-[#1A1E22] border-borderColor' : 'bg-inputBg border-[#363D43] ml-8'}`;
+            
+            const avatar = `<div class="w-10 h-10 rounded-xl flex items-center justify-center font-extrabold text-sm shrink-0 ${isAI ? 'bg-[#3E3422] text-primary' : 'bg-[#1A2E3B] text-[#4AA3DF]'}">${isAI ? 'AI' : 'AD'}</div>`;
+            const content = `<div><p class="font-bold text-white mb-1.5">${isAI ? 'Macalinka AI' : 'Adiga'}</p><p class="text-gray-300 leading-relaxed">${text}</p></div>`;
+            
+            div.innerHTML = avatar + content;
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function getLocalResponse(q) {
+            const query = q.toLowerCase();
+            if(query.includes('boorash')) return "Haddii aadan rabin boorash, waxaad ku bedeli kartaa Canjeero sarreen ah ama Garow la kariyey oo leh caano garoor. Waa cuntooyin soomaali ah oo caafimaad leh, oo kaa dherjinaya subaxdii.";
+            if(query.includes('calool')) return "Dhimista caloosha waxay u baahan tahay inaad cuntada yareyso (Calorie Deficit). Sidoo kale, iska ilaali sonkorta badan, cab biyo badan, oo samee jimicsiga loo yaqaan HIIT ama orodka fudud.";
+            if(query.includes('supplement')) return "Khasab ma aha in supplements la qaato. Haddii aad hesho hilib ku filan, kalluun, iyo digirta, waxaad heli kartaa borotiin kugu filan. Supplements-ka kaliya waa kaabeyaal.";
+            return "Su'aal fiican! Si aa si sax ah kuugu caawiyo, fadlan xaqiiji inaad qorshahaaga xisaabisay, kadibna i weydii su'aalo gaar u ah yoolkaaga.";
+        }
+
+        function askAICoach(text) {
+            appendMessage('User', text);
+            setTimeout(() => {
+                appendMessage('AI', getLocalResponse(text));
+            }, 800);
+        }
+
+        function sendCustomQuestion() {
+            const input = document.getElementById('aiUserInput');
+            if(!input.value.trim()) return;
+            askAICoach(input.value.trim());
+            input.value = '';
+        }
+
+        document.getElementById('aiUserInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendCustomQuestion();
+        });
+    </script>
+</body>
+</html>
